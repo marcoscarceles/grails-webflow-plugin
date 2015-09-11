@@ -36,7 +36,6 @@ import org.springframework.webflow.engine.builder.FlowAssembler
 import org.springframework.webflow.engine.builder.support.FlowBuilderServices
 import org.springframework.webflow.engine.impl.FlowExecutionImplFactory
 import org.springframework.webflow.execution.FlowExecutionFactory
-import org.springframework.webflow.execution.factory.StaticFlowExecutionListenerLoader
 import org.springframework.webflow.execution.repository.impl.DefaultFlowExecutionRepository
 import org.springframework.webflow.execution.repository.snapshot.SerializedFlowExecutionSnapshotFactory
 import org.springframework.webflow.expression.spel.WebFlowSpringELExpressionParser
@@ -75,23 +74,9 @@ class WebFlowPluginSupport {
         flowRegistry(FlowDefinitionRegistryImpl)
 
         flowScopeRegistrar(ScopeRegistrar)
-        boolean configureHibernateListener = springConfig.containsBean("sessionFactory")
-        if (configureHibernateListener) {
-            try {
-                hibernateConversationListener(org.codehaus.groovy.grails.webflow.persistence.SessionAwareHibernateFlowExecutionListener, sessionFactory, transactionManager)
-                executionListenerLoader(org.springframework.webflow.execution.factory.StaticFlowExecutionListenerLoader, hibernateConversationListener)
-            }
-            catch (MissingPropertyException mpe) {
-                // no session factory, this is ok
-                log.info "Webflow loading without Hibernate integration. SessionFactory not found."
-            }
-        }
 
         flowExecutionFactory(FlowExecutionImplFactory) {
             executionAttributes = new LocalAttributeMap(alwaysRedirectOnPause:true)
-            if (configureHibernateListener) {
-                executionListenerLoader = ref("executionListenerLoader")
-            }
         }
 
         conversationManager(SessionBindingConversationManager)

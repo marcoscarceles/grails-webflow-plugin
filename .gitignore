@@ -4,3 +4,8 @@ target
 unzipped
 .settings/
 *.log
+/*.iml
+/*.ipr
+/*.iws
+/out
+/web-app

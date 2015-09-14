@@ -17,7 +17,7 @@ package org.codehaus.groovy.grails.webflow.engine.builder
 import grails.util.GrailsNameUtils
 
 import org.codehaus.groovy.grails.commons.GrailsDomainConfigurationUtil
-import org.codehaus.groovy.grails.web.binding.GrailsDataBinder
+import org.codehaus.groovy.grails.web.binding.DataBindingUtils
 import org.codehaus.groovy.grails.web.servlet.GrailsApplicationAttributes
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -106,8 +106,7 @@ class ClosureInvokingAction extends AbstractAction {
 
                     def params = noOfParams > 1 ? actionDelegate.params[GrailsNameUtils.getPropertyName(instance.class)] : actionDelegate.params
                     if (params) {
-                        def binder = GrailsDataBinder.createBinder(instance, instance.class.name, actionDelegate.request)
-                        binder.bind(params)
+                        DataBindingUtils.bindObjectToInstance(instance, params)
                     }
                     instance.validate()
                     commandInstances << instance

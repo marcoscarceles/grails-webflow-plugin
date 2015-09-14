@@ -1,9 +1,6 @@
 package org.codehaus.groovy.grails.webflow
 
 import org.codehaus.groovy.grails.webflow.support.AbstractGrailsTagAwareFlowExecutionTests
-import org.springframework.webflow.definition.FlowDefinition
-import org.codehaus.groovy.grails.webflow.engine.builder.FlowBuilder
-import org.springframework.webflow.context.servlet.ServletExternalContext
 
 /**
  * Tests the functionality of command objects in web flows.
@@ -65,6 +62,29 @@ class FlowCommandObjectsTests extends AbstractGrailsTagAwareFlowExecutionTests {
         assertFlowExecutionOutcomeEquals "end"
     }
 
+    void testNestedCommandInFlowTransition() {
+        request.addParameter("one1", "yes1")
+        request.addParameter("one2", "yes2")
+        request.addParameter("nested.nested1", "YES1")
+        request.addParameter("nested.nested2", "YES2")
+
+        startFlow()
+        assertCurrentStateEquals("two")
+
+        signalEvent("complex")
+        assertCurrentStateEquals("four")
+
+        signalEvent("go")
+        assertCurrentStateEquals("stopHere")
+
+        def model = getFlowScope()
+        def complex = model.complex
+        assert complex instanceof Command1
+        assert complex.nested instanceof NestedCommand
+        assert complex.nested.nested1 == "YES1"
+        assert complex.nested.nested2 == "YES2"
+    }
+
     void testCommandObjectAutowiringInFlow() {
         startFlow()
 
@@ -97,12 +117,18 @@ class FlowCommandObjectsTests extends AbstractGrailsTagAwareFlowExecutionTests {
                     flow.put('stuff',[one2:c1])
                 }.to "stopHere"
                 on("else").to "three"
+                on("complex").to "four"
             }
             three {
                on("go") { AutoWireCommand1 c1 ->
                     flow.put('cmd', c1)
                }.to "stopHere"
 
+            }
+            four {
+                on("go") { Command1 c1 ->
+                    flow.put('complex', c1)
+                }.to "stopHere"
             }
             stopHere {
                 on("end").to "end"
@@ -119,6 +145,7 @@ class AutoWireCommand1 {
 class Command1 {
     String one1
     String one2
+    NestedCommand nested
 
     static constraints = {
         one2(blank:false, nullable:false)
@@ -131,5 +158,15 @@ class Command2 {
 
     static constraints = {
         two2(blank:false, nullable:false)
+    }
+}
+
+
+class NestedCommand {
+    String nested1
+    String nested2
+
+    static constraints = {
+        nested2(blank:false, nullable:false)
     }
 }
